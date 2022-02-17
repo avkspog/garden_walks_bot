@@ -135,7 +135,7 @@ func (c *Config) GetURL() string {
 	b.WriteString(c.Lon)
 	b.WriteString("&appid=")
 	b.WriteString(c.APPID)
-	b.WriteString("&units=metrics")
+	b.WriteString("&units=metric")
 
 	return b.String()
 }
