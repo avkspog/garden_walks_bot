@@ -63,6 +63,7 @@ func main() {
 	c := getWeather(errGroup, cfg)
 	if weather, ok := <-c; ok {
 		fmt.Println(weather)
+		fmt.Println(walkResult(&weather))
 	}
 
 	if err := errGroup.Wait(); err != nil {
@@ -102,7 +103,7 @@ func walkResult(w *Weather) (int8, string) {
 }
 
 func text(text string, w *Weather) string {
-	return fmt.Sprintf("%s Сейчас %f C и ветер %f м/c.", text, w.Main.Temp, w.Wind.Speed)
+	return fmt.Sprintf("%s Сейчас %.1f C и ветер %.1f м/c.", text, w.Main.Temp, w.Wind.Speed)
 }
 
 func (c *Config) Check() error {
