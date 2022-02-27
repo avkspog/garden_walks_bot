@@ -1,1 +1,1 @@
-worker: bin/avkspog.github.com
+worker: bin/garden_walks_bot
