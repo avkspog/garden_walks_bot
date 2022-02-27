@@ -49,34 +49,35 @@ func walkResult(w *Weather) (int8, string) {
 	v := w.Wind.Speed
 
 	if t >= 0 {
-		return CHECK_WEATHER, text("Прогулка не отменяется.", w)
+		return CHECK_WEATHER, w.Text("Прогулка не отменяется.\n☀️")
 	}
 
 	if t >= -14 && t < 0 {
-		return GOOD_WEATHER, text("Прогулка не отменяется.", w)
+		return GOOD_WEATHER, w.Text("Прогулка не отменяется.\n🌡️")
 	}
 
 	if t >= -30 && t <= -15 && v > 7 {
-		return BAD_WEATHER, text("Прогулка отменяется.", w)
+		return BAD_WEATHER, w.Text("Прогулка отменяется.\n☃️")
 	}
 
 	if t >= -30 && t <= -15 && v <= 7 {
-		return GOOD_WEATHER, text("Прогулка не отменяется.", w)
+		return GOOD_WEATHER, w.Text("Прогулка не отменяется.\n🌡️")
 	}
 
 	if t >= -15 && t < 0 && v >= 7 {
-		return GOOD_WEATHER, text("Прогулка не отменяется.", w)
+		return GOOD_WEATHER, w.Text("Прогулка не отменяется.\n🌡️")
 	}
 
 	if t < -30 {
-		return BAD_WEATHER, text("Прогулка отменяется.", w)
+		return BAD_WEATHER, w.Text("Прогулка отменяется.\n❄️")
 	}
 
 	return CHECK_WEATHER, "Данные о температуре не определены."
 }
 
-func text(text string, w *Weather) string {
-	return fmt.Sprintf("%s Сейчас %.1f C и ветер %.1f м/c.", text, w.Main.Temp, w.Wind.Speed)
+func (w *Weather) Text(text string) string {
+	return fmt.Sprintf("🚶 %s Сейчас %.1fC и ветер %.1f м/c.",
+		text, w.Main.Temp, w.Wind.Speed)
 }
 
 func (c *Config) Check() error {
