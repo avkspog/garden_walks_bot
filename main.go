@@ -17,11 +17,17 @@ import (
 )
 
 const (
-	ERRORS           string        = "errors"
-	ERROR_EXPIRATION time.Duration = 24 * time.Hour
+	ERRORS             string        = "errors"
+	ERROR_EXPIRATION   time.Duration = 24 * time.Hour
+	WEATHER            string        = "weather"
+	WEATHER_EXPIRATION time.Duration = 30 * time.Minute
 )
 
-var logCache *cache.Cache
+const (
+	GOOD_WEATHER  = 1
+	BAD_WEATHER   = 2
+	CHECK_WEATHER = 3
+)
 
 type Main struct {
 	Temp      float32 `json:"temp,omitempty"`
@@ -49,11 +55,8 @@ type Config struct {
 	Lon   string
 }
 
-const (
-	GOOD_WEATHER  = 1
-	BAD_WEATHER   = 2
-	CHECK_WEATHER = 3
-)
+var logCache *cache.Cache
+var weatherCache *cache.Cache
 
 func walkResult(w *Weather) (int8, string) {
 	t := w.Main.Temp
@@ -129,6 +132,15 @@ func (c *Config) GetURL() string {
 func getWeather(group *errgroup.Group, cfg *Config) <-chan Weather {
 	out := make(chan Weather)
 
+	if w, ok := weatherCache.Get(WEATHER); ok {
+		go func(ch <-chan Weather) {
+			defer close(out)
+			out <- w.(Weather)
+		}(out)
+
+		return out
+	}
+
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -154,6 +166,8 @@ func getWeather(group *errgroup.Group, cfg *Config) <-chan Weather {
 			return err
 		}
 
+		weatherCache.Set(WEATHER, weather, WEATHER_EXPIRATION)
+
 		out <- weather
 
 		return nil
@@ -164,6 +178,7 @@ func getWeather(group *errgroup.Group, cfg *Config) <-chan Weather {
 
 func main() {
 	logCache = cache.New(ERROR_EXPIRATION, 15*time.Minute)
+	weatherCache = cache.New(WEATHER_EXPIRATION, 5*time.Minute)
 
 	cfg := &Config{
 		Url:   os.Getenv("WEATHER_URL"),
