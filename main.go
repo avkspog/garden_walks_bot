@@ -50,10 +50,11 @@ type Weather struct {
 }
 
 type Config struct {
-	Url   string
-	APPID string
-	Lat   string
-	Lon   string
+	Url      string
+	APPID    string
+	Lat      string
+	Lon      string
+	TimeZone string
 }
 
 var logCache *cache.Cache
@@ -113,6 +114,10 @@ func (c *Config) Check() error {
 		return errors.New("Langitide must be specified")
 	}
 
+	if c.TimeZone == "" {
+		return errors.New("TimeZone must be specified")
+	}
+
 	return nil
 }
 
@@ -168,7 +173,7 @@ func getWeather(group *errgroup.Group, cfg *Config) <-chan Weather {
 			return err
 		}
 
-		weather.LastRequest = time.Now()
+		weather.LastRequest = localTime(cfg.TimeZone)
 
 		weatherCache.Set(WEATHER, weather, WEATHER_EXPIRATION)
 
@@ -185,10 +190,11 @@ func main() {
 	weatherCache = cache.New(WEATHER_EXPIRATION, 5*time.Minute)
 
 	cfg := &Config{
-		Url:   os.Getenv("WEATHER_URL"),
-		APPID: os.Getenv("WEATHER_APPID"),
-		Lat:   os.Getenv("WEATHER_LAT"),
-		Lon:   os.Getenv("WEATHER_LON"),
+		Url:      os.Getenv("WEATHER_URL"),
+		APPID:    os.Getenv("WEATHER_APPID"),
+		Lat:      os.Getenv("WEATHER_LAT"),
+		Lon:      os.Getenv("WEATHER_LON"),
+		TimeZone: os.Getenv("WEATHER_TIMEZONE"),
 	}
 
 	err := cfg.Check()
@@ -269,4 +275,13 @@ func getErrors() string {
 	}
 
 	return errors.(string)
+}
+
+func localTime(timeZone string) time.Time {
+	loc, err := time.LoadLocation(timeZone)
+	if err != nil {
+		fmt.Println("--------------")
+		return time.Now()
+	}
+	return time.Now().In(loc)
 }
