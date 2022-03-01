@@ -44,8 +44,9 @@ type Wind struct {
 }
 
 type Weather struct {
-	Main Main `json:"main,omitempty"`
-	Wind Wind `json:"wind,omitempty"`
+	Main        Main `json:"main,omitempty"`
+	Wind        Wind `json:"wind,omitempty"`
+	LastRequest time.Time
 }
 
 type Config struct {
@@ -90,8 +91,9 @@ func walkResult(w *Weather) (int8, string) {
 }
 
 func (w *Weather) Text(text string) string {
-	return fmt.Sprintf("🚶 %s Сейчас %.1fC и ветер %.1f м/c.",
-		text, w.Main.Temp, w.Wind.Speed)
+	time := fmt.Sprintf("%v:%v", w.LastRequest.Hour(), w.LastRequest.Minute())
+	return fmt.Sprintf("🚶 %s Сейчас %.1fC и ветер %.1f м/c. По состоянию на %s",
+		text, w.Main.Temp, w.Wind.Speed, time)
 }
 
 func (c *Config) Check() error {
@@ -165,6 +167,8 @@ func getWeather(group *errgroup.Group, cfg *Config) <-chan Weather {
 		if err != nil {
 			return err
 		}
+
+		weather.LastRequest = time.Now()
 
 		weatherCache.Set(WEATHER, weather, WEATHER_EXPIRATION)
 
